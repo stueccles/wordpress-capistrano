@@ -1,21 +1,45 @@
+h2. Summary
+
+This is a repo intended for use as a template for your wordpress projects.
+
+h2. Setup
+
+* "Fork":http://github.com/jestro/wordpress-capistrano/fork this repo
+* Rename your project, make it private if desired
+* Clone your fresh repo:
+
+<pre>
+  <code>
+    git clone git@github.com:yourname/yourwordpressproject.git
+    cd yourwordpressproject
+    git submodule init
+    git submodule update
+  </code>
+</pre>
+
+* Create a theme in @themes@
+* Drop your plugins in @plugins@
+* Update @config/wp-config.php@
+* Adjust the @@
+
 h3. Switching Wordpress Versions
 
 <pre>
-<code>
-  cd wordpress
+  <code>
+    cd wordpress
 
-  #show all versions
-  git tag -l
+    #show all versions
+    git tag -l
 
-  #checkout a version
-  git checkout 2.6.3
+    #checkout a version
+    git checkout 2.6.3
 
-  cd ..
+    cd ..
 
-  #commit
-  git commit wordpress -m "use wordpress 2.6.3"
+    #commit
+    git commit wordpress -m "use wordpress 2.6.3"
 
-  #push
-  git push
-</code>
+    #push
+    git push
+  </code>
 </pre>

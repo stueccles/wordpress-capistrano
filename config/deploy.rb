@@ -1,15 +1,35 @@
-set :application, "set your application name here"
-set :repository,  "set your repository location here"
+#the domain name for the server you'll be running wordpress on
+set :server, "localhost"
 
-# If you aren't deploying to /u/apps/#{application} on the target
-# servers (which is the default), you can specify the actual location
-# via the :deploy_to variable:
-# set :deploy_to, "/var/www/#{application}"
+#the name of this wordpress project
+set :application, "wordpress-capistrano-test"
 
-# If you aren't using Subversion to manage your source code, specify
-# your SCM below:
-# set :scm, :subversion
+#your repo
+set :repository,  "git@github.com:jestro/wordpress-capistrano.git"
 
-role :app, "your app-server here"
-role :web, "your web-server here"
-role :db,  "your db-server here", :primary => true
+#the folder that your server is configured to serve wordpress from
+set :deploy_to, "/Library/WebServer/Documents/wordpress"
+
+##############################################################################
+# You shouldn't need to touch the rest of this stuff.                        #
+##############################################################################
+
+default_run_options[:pty] = true
+set :scm, "git"
+set :deploy_via, :remote_cache
+set :branch, "master"
+set :git_enable_submodules, 1
+
+#allow deploys w/o having git installed locally
+set(:real_revision) { capture("git ls-remote #{repository} #{branch} | cut -f 1") }
+
+role :app, server
+role :web, server
+role :db,  server, :primary => true
+
+namespace :deploy do
+  desc "Override deploy restart to not do anything"
+  task :restart do
+    #
+  end
+end
