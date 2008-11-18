@@ -7,7 +7,22 @@ set :application, "wordpress-capistrano-test"
 #your repo
 set :repository,  "git@github.com:jestro/wordpress-capistrano.git"
 
-#the folder that your server is configured to serve wordpress from
+#the folder wordpress will be deployed to.
+#
+# NOTE:
+#
+# Your web server will need to be configured with a DocumentRoot of 
+# whatever you set below, with 'current/wordpress' added to the end.
+#
+# Example:
+#
+# set :deploy_to, "/var/www/mywordpressapp"
+#
+# <VirtualHost *:80>
+#  ServerName foo.com
+#  ServerAlias www.foo.com
+#  DocumentRoot /var/www/mywordpressapp/current/wordpress
+# </VirtualHost>
 set :deploy_to, "/Library/WebServer/Documents/wordpress"
 
 ##############################################################################

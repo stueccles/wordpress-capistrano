@@ -20,7 +20,9 @@ h2. Setup
 * Create a theme in @themes@
 * Drop your plugins in @plugins@
 * Update @config/wp-config.php@
-* Adjust the @@
+* Adjust the settings at the top of @config/deploy.rb@
+* @cap deploy:setup@
+* @cap deploy@
 
 h3. Switching Wordpress Versions
 
