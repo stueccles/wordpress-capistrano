@@ -1,0 +1,21 @@
+h3. Switching Wordpress Versions
+
+<pre>
+<code>
+  cd wordpress
+
+  #show all versions
+  git tag -l
+
+  #checkout a version
+  git checkout 2.6.3
+
+  cd ..
+
+  #commit
+  git commit wordpress -m "use wordpress 2.6.3"
+
+  #push
+  git push
+</code>
+</pre>
