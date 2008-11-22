@@ -1,3 +1,6 @@
 [submodule "wordpress"]
 	path = wordpress
 	url = git://github.com/veilleperso/wordpress.git
+[submodule "config/puppet"]
+	path = config/puppet
+	url = git://github.com/jestro/puppet-wordpress.git
