@@ -61,3 +61,41 @@ task :finalize_update, :except => { :no_release => true } do
     ln -s #{latest_release}/config/wp-config.php #{latest_release}/wordpress/wp-config.php
   CMD
 end
+
+namespace :puppet do
+
+  task :initial_setup do
+    set :user, 'root'
+    install_dependencies
+    download
+    update
+  end
+
+  task :install_dependencies do
+    #install ruby and curl
+    run "yum install -y ruby ruby-devel ruby-libs ruby-rdoc ruby-ri curl"
+
+    #install rubygems
+    run "cd /tmp && curl -OL http://rubyforge.org/frs/download.php/45905/rubygems-1.3.1.tgz"
+    run "cd /tmp && tar xfz rubygems-1.3.1.tgz"
+    run "cd /tmp/rubygems-1.3.1 && sudo ruby setup.rb"
+
+    #install puppet
+    run "gem install facter puppet --no-rdoc --no-ri"
+
+    #setup puppet dir
+    run "mkdir -p /var/puppet"
+  end
+
+  task :download do
+    run "cd /tmp && curl -L http://github.com/jestro/puppet-wordpress/tarball/master | tar xz"
+    run "rm -rf /etc/puppet"
+    run "mv /tmp/jestro-puppet-wordpress* /etc/puppet"
+    run "rm -rf jestro-puppet-wordpress-*"
+  end
+
+  task :update do
+    run "sudo sh -c 'PATH=/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/sbin puppet /etc/puppet/manifests/site.pp'"
+  end
+
+end
