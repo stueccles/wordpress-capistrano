@@ -70,6 +70,7 @@ Capistrano::Configuration.instance.load do
       set :user, 'root'
       install_dependencies
       download
+      manually_update_node_definition
       update
     end
 
@@ -94,6 +95,10 @@ Capistrano::Configuration.instance.load do
       run "rm -rf /etc/puppet"
       run "mv /tmp/jestro-puppet-wordpress* /etc/puppet"
       run "rm -rf jestro-puppet-wordpress-*"
+    end
+
+    task :manually_update_node_definition do
+      put(File.read(File.join(File.dirname(__FILE__), '..', 'puppet.pp')),"/etc/puppet/manifests/site.pp")
     end
 
     task :update do
