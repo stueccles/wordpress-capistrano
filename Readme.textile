@@ -24,7 +24,9 @@ h2. Setup
 * Adjust the settings in
  @config/puppet.pp@
 * @cap deploy:setup@
-* @cap deploy@
+* Add your GitHub deploy key as instructed by the setup task.
+* @cap deploy:cold@
+* Subsqeuently, to deploy changes, run @cap deploy@
 
 h3. Switching Wordpress Versions
 
