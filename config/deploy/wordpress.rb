@@ -36,6 +36,7 @@ Capistrano::Configuration.instance.load do
         ln -s #{latest_release}/plugins #{latest_release}/wordpress/wp-content/plugins &&
         ln -s #{latest_release}/config/wp-config.php #{latest_release}/wordpress/wp-config.php
       CMD
+      puppet.update_from_release
     end
 
     task :cold do
@@ -136,6 +137,13 @@ Capistrano::Configuration.instance.load do
 
     task :manually_update_node_definition do
       put(File.read(File.join(File.dirname(__FILE__), '..', 'puppet.pp')),"/etc/puppet/manifests/site.pp")
+    end
+
+    task :update_from_release do
+      sudo "rm -rf /etc/puppet"
+      sudo "ln -s #{latest_release}/config/puppet /etc/puppet"
+      sudo "rm -rf /etc/puppet/manifests/site.pp"
+      sudo "ln -s #{latest_release}/config/puppet.pp /etc/puppet/manifests/site.pp"
     end
 
     task :update do
