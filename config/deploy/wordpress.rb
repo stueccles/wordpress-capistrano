@@ -10,7 +10,24 @@ Capistrano::Configuration.instance.load do
   set :git_enable_submodules, 1
 
   #allow deploys w/o having git installed locally
-  set(:real_revision) { capture("git ls-remote #{repository} #{branch} | cut -f 1") }
+  set(:real_revision) do
+    output = ""
+    invoke_command("git ls-remote #{repository} #{branch} | cut -f 1", :once => true) do |ch, stream, data|
+      case stream
+      when :out
+        if data =~ /\(yes\/no\)\?/ # first time connecting via ssh, add to known_hosts?
+          ch.send_data "yes\n"
+        elsif data =~ /Warning/
+        elsif data =~ /yes/
+          #
+        else
+          output << data
+        end
+      when :err then warn "[err :: #{ch[:server]}] #{data}"
+      end
+    end
+    output.gsub(/\\/, '').chomp
+  end
   #no need for system, log, and pids directory
   set :shared_children, %w()
 
@@ -20,6 +37,7 @@ Capistrano::Configuration.instance.load do
 
   before "deploy:setup", "puppet:initial_setup"
   before "deploy:setup", "setup:users"
+  after "deploy:setup", "setup:fix_permissions"
 
   namespace :deploy do
     desc "Override deploy restart to not do anything"
@@ -61,6 +79,7 @@ Capistrano::Configuration.instance.load do
 
     task :generate_ssh_keys do
       run "mkdir -p /home/wordpress/.ssh"
+      run "chmod 700 /home/wordpress/.ssh"
       run "ssh-keygen -q -f /home/wordpress/.ssh/id_rsa -N ''"
       pubkey = capture("cat /home/wordpress/.ssh/id_rsa.pub")
       puts "Below is a freshly generated SSH public key for your server."
@@ -85,6 +104,10 @@ Capistrano::Configuration.instance.load do
       else
         puts "Not resetting password, none provided"
       end
+    end
+
+    task :fix_permissions do
+      sudo "chown -R #{user}:wheel #{deploy_to}"
     end
   end
 
