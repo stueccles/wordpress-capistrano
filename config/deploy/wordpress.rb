@@ -54,11 +54,13 @@ Capistrano::Configuration.instance.load do
       run "groupadd -f wheel"
       run "useradd -g wheel wordpress || echo"
       reset_password
+      teardown_connections_to(sessions.keys)
       set :user, 'wordpress'
       generate_ssh_keys
     end
 
     task :generate_ssh_keys do
+      run "mkdir -p /home/wordpress/.ssh"
       run "ssh-keygen -q -f /home/wordpress/.ssh/id_rsa -N ''"
       pubkey = capture("cat /home/wordpress/.ssh/id_rsa.pub")
       puts "Below is a freshly generated SSH public key for your server."
