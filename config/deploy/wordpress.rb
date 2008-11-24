@@ -51,8 +51,8 @@ Capistrano::Configuration.instance.load do
       set :user, 'root'
       reset_password
       set :password_user, 'wordpress'
-      run "groupadd wheel"
-      run "useradd -g wheel wordpress"
+      run "groupadd -f wheel"
+      run "useradd -g wheel wordpress || echo"
       reset_password
       set :user, 'wordpress'
       generate_ssh_keys
@@ -107,8 +107,8 @@ Capistrano::Configuration.instance.load do
 
     task :initial_setup do
       set :user, 'root'
-      run "groupadd puppet"
-      run "useradd -g puppet puppet"
+      run "groupadd -f puppet"
+      run "useradd -g puppet puppet || echo"
       install_dependencies
       download
       manually_update_node_definition
@@ -118,7 +118,7 @@ Capistrano::Configuration.instance.load do
 
     task :install_dependencies do
       #install ruby and curl
-      run "yum install -y ruby ruby-devel ruby-libs ruby-rdoc ruby-ri curl"
+      run "yum install -y ruby ruby-devel ruby-libs ruby-rdoc ruby-ri curl which"
 
       #install rubygems
       run "cd /tmp && curl -OL http://rubyforge.org/frs/download.php/45905/rubygems-1.3.1.tgz"
