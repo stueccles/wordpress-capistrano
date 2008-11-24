@@ -51,6 +51,8 @@ Capistrano::Configuration.instance.load do
       set :user, 'root'
       reset_password
       set :password_user, 'wordpress'
+      run "groupadd wheel"
+      run "useradd -g wheel wordpress"
       reset_password
       set :user, 'wordpress'
       generate_ssh_keys
@@ -105,6 +107,8 @@ Capistrano::Configuration.instance.load do
 
     task :initial_setup do
       set :user, 'root'
+      run "groupadd puppet"
+      run "useradd -g puppet puppet"
       install_dependencies
       download
       manually_update_node_definition
