@@ -1,5 +1,5 @@
 #the domain name for the server you'll be running wordpress on
-set :domain, "localhost"
+set :domain, "173.45.229.62"
 
 #the name of this wordpress project
 set :application, "wordpress-capistrano-test"
