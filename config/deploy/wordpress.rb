@@ -69,7 +69,7 @@ Capistrano::Configuration.instance.load do
     end
 
     task :reset_password do
-      user = fetch(:user, 'root')
+      user = fetch(:password_user, 'root')
       puts "Changing password for user #{password_user}"
       root_password = Capistrano::CLI.password_prompt "New UNIX password:"
       root_password_confirmation = Capistrano::CLI.password_prompt "Retype new UNIX password:"
