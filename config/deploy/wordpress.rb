@@ -17,9 +17,6 @@ Capistrano::Configuration.instance.load do
   role :web, domain
   role :db,  domain, :primary => true
 
-  before "deploy:setup", "puppet:initial_setup"
-  before "deploy:setup", "setup:users"
-
   namespace :deploy do
     desc "Override deploy restart to not do anything"
     task :restart do
@@ -42,6 +39,7 @@ Capistrano::Configuration.instance.load do
 
     task :users do
       reset_password
+      run 'sudo useradd -G wheel wordpress'
       set :user, 'wordpress'
       reset_password
     end
@@ -63,6 +61,7 @@ Capistrano::Configuration.instance.load do
       end
     end
   end
+  after "deploy:setup", "setup:users"
 
   namespace :puppet do
 
@@ -101,5 +100,6 @@ Capistrano::Configuration.instance.load do
     end
 
   end
+  after "deploy:setup", "puppet:initial_setup"
 
 end
