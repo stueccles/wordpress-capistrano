@@ -1,0 +1,31 @@
+<%#if you make any changes to this file in your repository, run cap apache:configure to apply %>
+<VirtualHost *:80>
+  ServerName <%= domain %>
+  <% server_aliases_array.each do |a| %>
+    ServerAlias <%= "#{a}" %>
+  <% end %>
+  DocumentRoot <%= "#{current_path}/wordpress" %>
+
+  <Directory <%= "#{current_path}/wordpress" %>>
+    Options FollowSymLinks
+    AllowOverride None
+    Order allow,deny
+    Allow from all
+  </Directory>
+
+  RewriteEngine On
+  
+  # Prevent access to .svn directories
+  RewriteRule ^(.*/)?\.svn/ - [F,L]
+  ErrorDocument 403 "Access Forbidden"
+  # Prevent access to .git directories
+  RewriteRule ^(.*/)?\.git/ - [F,L]
+  ErrorDocument 403 "Access Forbidden"
+
+  # Deflate
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml
+  BrowserMatch ^Mozilla/4 gzip-only-text/html
+  BrowserMatch ^Mozilla/4\.0[678] no-gzip
+  BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+
+ </VirtualHost>

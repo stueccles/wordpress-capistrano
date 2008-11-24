@@ -1,3 +1,4 @@
+require 'erb'
 Capistrano::Configuration.instance.load do
   default_run_options[:pty] = true
   set :deploy_to, "/var/www/apps/#{application}"
@@ -36,24 +37,42 @@ Capistrano::Configuration.instance.load do
         ln -s #{latest_release}/config/wp-config.php #{latest_release}/wordpress/wp-config.php
       CMD
     end
+
+    task :cold do
+      update
+      apache.configure
+    end
   end
 
   namespace :setup do
 
     task :users do
+      set :user, 'root'
+      reset_password
+      set :password_user, 'wordpress'
       reset_password
       set :user, 'wordpress'
-      reset_password
+      generate_ssh_keys
+    end
+
+    task :generate_ssh_keys do
+      run "ssh-keygen -q -f /home/wordpress/.ssh/id_rsa -N ''"
+      pubkey = capture("cat /home/wordpress/.ssh/id_rsa.pub")
+      puts "Below is a freshly generated SSH public key for your server."
+      puts "Please add this as a 'deploy key' to your github project."
+      puts ""
+      puts pubkey
+      puts ""
     end
 
     task :reset_password do
       user = fetch(:user, 'root')
-      puts "Changing password for user #{user}"
+      puts "Changing password for user #{password_user}"
       root_password = Capistrano::CLI.password_prompt "New UNIX password:"
       root_password_confirmation = Capistrano::CLI.password_prompt "Retype new UNIX password:"
       if root_password != ''
         if root_password == root_password_confirmation
-          run "echo \"#{ root_password }\" | sudo passwd --stdin #{user}"
+          run "echo \"#{ root_password }\" | sudo passwd --stdin #{password_user}"
         else
           puts "Passwords did not match"
           exit
@@ -61,6 +80,23 @@ Capistrano::Configuration.instance.load do
       else
         puts "Not resetting password, none provided"
       end
+    end
+  end
+
+  namespace :apache do
+    task :configure do
+      aliases = []
+      aliases << "www.#{domain}"
+      aliases.concat fetch(:server_aliases, [])
+      set :server_aliases_array, aliases
+
+      file = File.join(File.dirname(__FILE__), "..", "vhost.conf.erb")
+      template = File.read(file)
+      buffer = ERB.new(template).result(binding)
+
+      put buffer, "#{shared_path}/#{application}.conf", :mode => 0444
+      sudo "mv #{shared_path}/#{application}.conf /etc/httpd/conf.d/"
+      sudo "/etc/init.d/httpd restart"
     end
   end
 
@@ -72,6 +108,7 @@ Capistrano::Configuration.instance.load do
       download
       manually_update_node_definition
       update
+      set :user, 'wordpress'
     end
 
     task :install_dependencies do
