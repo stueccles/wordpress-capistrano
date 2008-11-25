@@ -36,8 +36,8 @@ Capistrano::Configuration.instance.load do
   role :db,  domain, :primary => true
 
   before "deploy:setup", "puppet:initial_setup"
-  before "deploy:setup", "setup:users"
   after "deploy:setup", "setup:fix_permissions"
+  after "deploy:setup", "setup:users"
 
   namespace :deploy do
     desc "Override deploy restart to not do anything"
@@ -67,12 +67,11 @@ Capistrano::Configuration.instance.load do
 
     task :users do
       set :user, 'root'
-      reset_password
-      set :password_user, 'wordpress'
       run "groupadd -f wheel"
       run "useradd -g wheel wordpress || echo"
       reset_password
-      teardown_connections_to(sessions.keys)
+      set :password_user, 'root'
+      reset_password
     end
 
     task :generate_ssh_keys do
@@ -136,7 +135,6 @@ Capistrano::Configuration.instance.load do
       download
       manually_update_node_definition
       update
-      set :user, 'wordpress'
     end
 
     task :install_dependencies do
