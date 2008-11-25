@@ -24,6 +24,7 @@ h2. Setup
 * Adjust the settings in
  @config/puppet.pp@
 * @cap deploy:setup@
+* @cap setup:generate_ssh_keys@
 * Add your GitHub deploy key as instructed by the setup task.
 * @cap deploy:cold@
 * Subsqeuently, to deploy changes, run @cap deploy@

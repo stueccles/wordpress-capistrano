@@ -73,8 +73,6 @@ Capistrano::Configuration.instance.load do
       run "useradd -g wheel wordpress || echo"
       reset_password
       teardown_connections_to(sessions.keys)
-      set :user, 'wordpress'
-      generate_ssh_keys
     end
 
     task :generate_ssh_keys do
