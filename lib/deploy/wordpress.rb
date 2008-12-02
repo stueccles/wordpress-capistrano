@@ -166,9 +166,9 @@ Capistrano::Configuration.instance.load do
 
     task :update_from_release do
       sudo "rm -rf /etc/puppet"
-      sudo "ln -s #{latest_release}/config/puppet /etc/puppet"
+      sudo "ln -s #{latest_release}/lib/puppet /etc/puppet"
       sudo "rm -rf /etc/puppet/manifests/site.pp"
-      sudo "ln -s #{latest_release}/config/puppet.pp /etc/puppet/manifests/site.pp"
+      sudo "ln -s #{latest_release}/lib/puppet.pp /etc/puppet/manifests/site.pp"
     end
 
     task :update do
