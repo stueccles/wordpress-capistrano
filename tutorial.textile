@@ -9,11 +9,14 @@ Instructions here.
 h2. Common WordPress Tasks
 
 *Deploy a new version after a commit*
+
 @cap deploy@
 
 *Import a DB*
+
 @Instructions here.@
 
 *Export a DB*
+
 @Instructions here.@
 
