@@ -1,6 +1,6 @@
 h1. Wordpress Capistrano Tutorial
 
-Welcome to the Wordpress Capistrano tutorial. This tutorial assumes you have already provisioned a CentOS LAMP server using "puppet-lamp":http://github.com/jestro/puppet-lamp/tree. The goal of this tutorial is to quickly and easily deploy, update, and manage WordPress instances on your CentOS server or slice.
+Welcome to the Wordpress Capistrano tutorial. This tutorial assumes you have already provisioned a CentOS 5 LAMP server using "puppet-lamp":http://github.com/jestro/puppet-lamp/tree. The goal of this tutorial is to quickly and easily deploy, update, and manage WordPress instances on your CentOS server or slice.
 
 h2. Setup a fresh WordPress install
 
