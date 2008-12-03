@@ -6,18 +6,14 @@ h2. Setup a fresh WordPress install
 
 Instructions here. 
 
-h2. Common Tasks
+h2. Common WordPress Tasks
 
-h3. Deploy a new version after a commit
-
+*Deploy a new version after a commit*
 @cap deploy@
 
-h3. Import a DB
+*Import a DB*
+@Instructions here.@
 
-Instructions here.
-
-h3. Export a DB
-
-Instructions here.
-
+*Export a DB*
+@Instructions here.@
 
