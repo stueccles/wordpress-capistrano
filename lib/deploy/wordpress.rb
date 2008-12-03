@@ -8,6 +8,7 @@ Capistrano::Configuration.instance.load do
   set :deploy_via, :remote_cache
   set :branch, "master"
   set :git_enable_submodules, 1
+  set :puppet_tarball_url, "http://github.com/jestro/puppet-lamp/tarball/master"
 
   #allow deploys w/o having git installed locally
   set(:real_revision) do
@@ -28,6 +29,7 @@ Capistrano::Configuration.instance.load do
     end
     output.gsub(/\\/, '').chomp
   end
+
   #no need for system, log, and pids directory
   set :shared_children, %w()
 
@@ -35,9 +37,8 @@ Capistrano::Configuration.instance.load do
   role :web, domain
   role :db,  domain, :primary => true
 
-  before "deploy:setup", "puppet:initial_setup"
-  after "deploy:setup", "setup:fix_permissions"
-  after "deploy:setup", "setup:users"
+  after "puppet:setup", "setup:users"
+  after "deploy:setup", "apache:configure"
 
   namespace :deploy do
     desc "Override deploy restart to not do anything"
@@ -54,12 +55,6 @@ Capistrano::Configuration.instance.load do
         ln -s #{latest_release}/plugins #{latest_release}/wordpress/wp-content/plugins &&
         ln -s #{latest_release}/config/wp-config.php #{latest_release}/wordpress/wp-config.php
       CMD
-      puppet.update_from_release
-    end
-
-    task :cold do
-      update
-      apache.configure
     end
   end
 
@@ -103,9 +98,6 @@ Capistrano::Configuration.instance.load do
       end
     end
 
-    task :fix_permissions do
-      sudo "chown -R #{user}:wheel #{deploy_to}"
-    end
   end
 
   namespace :apache do
@@ -127,7 +119,7 @@ Capistrano::Configuration.instance.load do
 
   namespace :puppet do
 
-    task :initial_setup do
+    task :setup do
       set :user, 'root'
       run "groupadd -f puppet"
       run "useradd -g puppet puppet || echo"
@@ -154,21 +146,15 @@ Capistrano::Configuration.instance.load do
     end
 
     task :download do
-      run "cd /tmp && curl -L http://github.com/jestro/puppet-wordpress/tarball/master | tar xz"
+      run "cd /tmp && mkdir puppet"
+      run "cd /tmp/puppet && curl -L #{puppet_tarball_url} | tar xz"
       run "rm -rf /etc/puppet"
-      run "mv /tmp/jestro-puppet-wordpress* /etc/puppet"
-      run "rm -rf jestro-puppet-wordpress-*"
+      run "mv /tmp/puppet/* /etc/puppet"
+      run "rm -rf /tmp/puppet*"
     end
 
     task :manually_update_node_definition do
       put(File.read(File.join(File.dirname(__FILE__), '..', 'puppet.pp')),"/etc/puppet/manifests/site.pp")
-    end
-
-    task :update_from_release do
-      sudo "rm -rf /etc/puppet"
-      sudo "ln -s #{latest_release}/lib/puppet /etc/puppet"
-      sudo "rm -rf /etc/puppet/manifests/site.pp"
-      sudo "ln -s #{latest_release}/lib/puppet.pp /etc/puppet/manifests/site.pp"
     end
 
     task :update do

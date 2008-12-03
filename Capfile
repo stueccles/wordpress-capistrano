@@ -12,4 +12,7 @@ set :application, "wordpress-capistrano-test"
 #your repo
 set :repository,  "git@github.com:jestro/wordpress-capistrano.git"
 
+#if you've forked and customized puppet-lamp, enter the url to your repos tarball here
+#set :puppet_tarball_url, "http://github.com/jestro/puppet-lamp/tarball/master"
+
 require File.join(File.dirname(__FILE__), 'lib', 'deploy', 'wordpress')
