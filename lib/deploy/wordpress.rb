@@ -72,7 +72,7 @@ Capistrano::Configuration.instance.load do
       run "groupadd -f wheel"
       run "useradd -g wheel wordpress || echo"
       reset_password
-      set :password_user, 'root'
+      set :password_user, 'wordpress'
       reset_password
     end
 
@@ -98,7 +98,7 @@ Capistrano::Configuration.instance.load do
         if password != ''
           if password == password_confirmation
             run "echo \"#{ password }\" | sudo passwd --stdin #{password_user}"
-            password_set = false
+            password_set = true
           else
             puts "Passwords did not match"
           end
@@ -134,14 +134,14 @@ Capistrano::Configuration.instance.load do
     end
 
     task :password do
-      puts "Setting MySQL Password:"
+      puts "Setting MySQL Password"
       password_set = false
       while !password_set do
         password = Capistrano::CLI.ui.ask "New MySQL password:"
         password_confirmation = Capistrano::CLI.ui.ask "Retype new MySQL password:"
         if password == password_confirmation
           run "mysqladmin -uroot password #{password}"
-          password_set = false
+          password_set = true
         else
           puts "Passwords did not match"
         end
