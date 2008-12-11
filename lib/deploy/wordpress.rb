@@ -1,4 +1,6 @@
 require 'erb'
+require 'digest'
+require 'digest/sha1'
 Capistrano::Configuration.instance.load do
   default_run_options[:pty] = true
   set :deploy_to, "/var/www/apps/#{application}"
@@ -9,6 +11,12 @@ Capistrano::Configuration.instance.load do
   set :branch, "master"
   set :git_enable_submodules, 1
   set :puppet_tarball_url, "http://github.com/jestro/puppet-lamp/tarball/master"
+  set :wordpress_db_host, "localhost"
+  set :wordpress_svn_url, "http://svn.automattic.com/wordpress/tags/2.7"
+  set :wordpress_auth_key, Digest::SHA1.hexdigest(rand.to_s)
+  set :wordpress_secure_auth_key, Digest::SHA1.hexdigest(rand.to_s)
+  set :wordpress_logged_in_key, Digest::SHA1.hexdigest(rand.to_s)
+  set :wordpress_nonce_key, Digest::SHA1.hexdigest(rand.to_s)
 
   #allow deploys w/o having git installed locally
   set(:real_revision) do
@@ -37,8 +45,6 @@ Capistrano::Configuration.instance.load do
   role :web, domain
   role :db,  domain, :primary => true
 
-  after "deploy:setup", "apache:configure"
-
   namespace :deploy do
     desc "Override deploy restart to not do anything"
     task :restart do
@@ -46,14 +52,29 @@ Capistrano::Configuration.instance.load do
     end
 
     task :finalize_update, :except => { :no_release => true } do
-      run "chmod -R g+w #{latest_release}" if fetch(:group_writable, true)
-      #link the themes, plugins, and config
+      run "chmod -R g+w #{latest_release}"
+
       run <<-CMD
-        rm -rf #{latest_release}/wordpress/wp-content/themes #{latest_release}/wordpress/wp-content/plugins &&
-        ln -s #{latest_release}/themes #{latest_release}/wordpress/wp-content/themes &&
-        ln -s #{latest_release}/plugins #{latest_release}/wordpress/wp-content/plugins &&
-        ln -s #{latest_release}/config/wp-config.php #{latest_release}/wordpress/wp-config.php
+        mkdir -p #{latest_release}/finalized &&
+        cp -rv   #{shared_path}/wordpress/*     #{latest_release}/finalized/ &&
+        cp -rv   #{shared_path}/wp-config.php   #{latest_release}/finalized/wp-config.php &&
+        rm -f    #{latest_release}/finalized/wp-content &&
+        mkdir    #{latest_release}/finalized/wp-content &&
+        cp -rv   #{latest_release}/themes       #{current_path}/finalized/wp-content/ &&
+        cp -rv   #{latest_release}/plugins      #{current_path}/finalized/wp-content/
       CMD
+    end
+
+    task :symlink, :except => { :no_release => true } do
+      on_rollback do
+        if previous_release
+          run "rm -f #{current_path}; ln -s #{previous_release}/finalized #{current_path}; true"
+        else
+          logger.important "no previous release to rollback to, rollback of symlink skipped"
+        end
+      end
+
+      run "rm -f #{current_path} && ln -s #{latest_release}/finalized #{current_path}"
     end
   end
 
@@ -65,6 +86,15 @@ Capistrano::Configuration.instance.load do
       puppet.setup
       setup.users
       mysql.password
+    end
+
+    desc "Setup wordpress"
+    task :wordpress do
+      deploy.setup
+      mysql.create_databases
+      wordpress.checkout
+      wordpress.configure
+      apache.configure
     end
 
     task :users do
@@ -150,18 +180,27 @@ Capistrano::Configuration.instance.load do
 
     task :create_databases do
       wordpress.passwords
-      fetch(:mysql_root_password, Capistrano::CLI.password_prompt("MySQL root password:"))
-      run "mysqladmin -uroot -p#{mysql_root_password} create #{wordpress_db_name}"
+      set :mysql_root_password, fetch(:mysql_root_password, Capistrano::CLI.password_prompt("MySQL root password:"))
+      run "mysqladmin -uroot -p#{mysql_root_password} --default-character-set=utf8 create #{wordpress_db_name}"
       run "echo 'GRANT ALL PRIVILEGES ON #{wordpress_db_name}.* to \"#{wordpress_db_user}\"@\"localhost\" IDENTIFIED BY \"#{wordpress_db_password}\"; FLUSH PRIVILEGES;' | mysql -uroot -p#{mysql_root_password}"
     end
 
   end
 
   namespace :wordpress do
-    task :passwords do
-      fetch(:wordpress_db_name, Capistrano::CLI.ui.ask("New Wordpress Database Name:"))
-      fetch(:wordpress_db_user, Capistrano::CLI.ui.ask("New Wordpress Database User:"))
-      fetch(:wordpress_db_password, Capistrano::CLI.ui.ask("New Wordpress Database User:"))
+
+    task :checkout do
+      run "rm -rf #{shared_path}/wordpress || true"
+      run "svn co #{wordpress_svn_url} #{shared_path}/wordpress"
+    end
+
+    task :configure do
+      wordpress.passwords
+      file = File.join(File.dirname(__FILE__), "..", "wp-config.php.erb")
+      template = File.read(file)
+      buffer = ERB.new(template).result(binding)
+
+      put buffer, "#{shared_path}/wp-config.php", :mode => 0444
     end
   end
 
