@@ -37,7 +37,6 @@ Capistrano::Configuration.instance.load do
   role :web, domain
   role :db,  domain, :primary => true
 
-  after "puppet:setup", "setup:users"
   after "deploy:setup", "apache:configure"
 
   namespace :deploy do
@@ -59,6 +58,14 @@ Capistrano::Configuration.instance.load do
   end
 
   namespace :setup do
+
+    desc "Setup a new server for use with wordpress-capistrano. This runs as root."
+    task :server do
+      set :user, 'root'
+      puppet.setup
+      setup.users
+      mysql.password
+    end
 
     task :users do
       set :user, 'root'
@@ -84,17 +91,20 @@ Capistrano::Configuration.instance.load do
     task :reset_password do
       password_user = fetch(:password_user, 'root')
       puts "Changing password for user #{password_user}"
-      root_password = Capistrano::CLI.password_prompt "New UNIX password:"
-      root_password_confirmation = Capistrano::CLI.password_prompt "Retype new UNIX password:"
-      if root_password != ''
-        if root_password == root_password_confirmation
-          run "echo \"#{ root_password }\" | sudo passwd --stdin #{password_user}"
+      password_set = false
+      while !password_set do
+        password = Capistrano::CLI.ui.ask "New UNIX password:"
+        password_confirmation = Capistrano::CLI.ui.ask "Retype new UNIX password:"
+        if password != ''
+          if password == password_confirmation
+            run "echo \"#{ password }\" | sudo passwd --stdin #{password_user}"
+            password_set = false
+          else
+            puts "Passwords did not match"
+          end
         else
-          puts "Passwords did not match"
-          exit
+          puts "Password cannot be blank"
         end
-      else
-        puts "Not resetting password, none provided"
       end
     end
 
@@ -117,10 +127,41 @@ Capistrano::Configuration.instance.load do
     end
   end
 
-  namespace :server do
-    desc "Setup the server with puppet"
+  namespace :mysql do
     task :setup do
-      puppet.setup
+      password
+      databases
+    end
+
+    task :password do
+      puts "Setting MySQL Password:"
+      password_set = false
+      while !password_set do
+        password = Capistrano::CLI.ui.ask "New MySQL password:"
+        password_confirmation = Capistrano::CLI.ui.ask "Retype new MySQL password:"
+        if password == password_confirmation
+          run "mysqladmin -uroot password #{password}"
+          password_set = false
+        else
+          puts "Passwords did not match"
+        end
+      end
+    end
+
+    task :create_databases do
+      wordpress.passwords
+      fetch(:mysql_root_password, Capistrano::CLI.password_prompt("MySQL root password:"))
+      run "mysqladmin -uroot -p#{mysql_root_password} create #{wordpress_db_name}"
+      run "echo 'GRANT ALL PRIVILEGES ON #{wordpress_db_name}.* to \"#{wordpress_db_user}\"@\"localhost\" IDENTIFIED BY \"#{wordpress_db_password}\"; FLUSH PRIVILEGES;' | mysql -uroot -p#{mysql_root_password}"
+    end
+
+  end
+
+  namespace :wordpress do
+    task :passwords do
+      fetch(:wordpress_db_name, Capistrano::CLI.ui.ask("New Wordpress Database Name:"))
+      fetch(:wordpress_db_user, Capistrano::CLI.ui.ask("New Wordpress Database User:"))
+      fetch(:wordpress_db_password, Capistrano::CLI.ui.ask("New Wordpress Database User:"))
     end
   end
 
@@ -135,11 +176,13 @@ Capistrano::Configuration.instance.load do
     end
 
     task :users do
+      set :user, 'root'
       run "groupadd -f puppet"
       run "useradd -g puppet puppet || echo"
     end
 
     task :install_dependencies do
+      set :user, 'root'
       #install ruby and curl
       run "yum install -y ruby ruby-devel ruby-libs ruby-rdoc ruby-ri curl which"
 
