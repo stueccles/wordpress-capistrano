@@ -117,16 +117,26 @@ Capistrano::Configuration.instance.load do
     end
   end
 
+  namespace :server do
+    desc "Setup the server with puppet"
+    task :setup do
+      puppet.setup
+    end
+  end
+
   namespace :puppet do
 
     task :setup do
       set :user, 'root'
-      run "groupadd -f puppet"
-      run "useradd -g puppet puppet || echo"
+      users
       install_dependencies
       download
-      manually_update_node_definition
       update
+    end
+
+    task :users do
+      run "groupadd -f puppet"
+      run "useradd -g puppet puppet || echo"
     end
 
     task :install_dependencies do
@@ -151,10 +161,6 @@ Capistrano::Configuration.instance.load do
       run "rm -rf /etc/puppet"
       run "mv /tmp/puppet/* /etc/puppet"
       run "rm -rf /tmp/puppet*"
-    end
-
-    task :manually_update_node_definition do
-      put(File.read(File.join(File.dirname(__FILE__), '..', 'puppet.pp')),"/etc/puppet/manifests/site.pp")
     end
 
     task :update do
