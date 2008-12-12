@@ -6,6 +6,7 @@ Capistrano::Configuration.instance.load do
   set :deploy_to, "/var/www/apps/#{application}"
   set :scm, "git"
   set :user, "wordpress"
+  set :admin_runner, user
   set :runner, user
   set :deploy_via, :remote_cache
   set :branch, "master"
@@ -38,8 +39,8 @@ Capistrano::Configuration.instance.load do
     output.gsub(/\\/, '').chomp
   end
 
-  #no need for system, log, and pids directory
-  set :shared_children, %w()
+  #no need for log and pids directory
+  set :shared_children, %w(system)
 
   role :app, domain
   role :web, domain
@@ -83,19 +84,25 @@ Capistrano::Configuration.instance.load do
     desc "Setup a new server for use with wordpress-capistrano. This runs as root."
     task :server do
       set :user, 'root'
-      puppet.setup
-      setup.users
+      puppet.install_and_run
+      util.users
       mysql.password
+      util.generate_ssh_keys
     end
 
-    desc "Setup wordpress"
+    desc "Setup this server for a new wordpress site."
     task :wordpress do
       deploy.setup
+      util.passwords
       mysql.create_databases
-      wordpress.checkout
-      wordpress.configure
+      wp.configure
       apache.configure
+      wp.checkout
     end
+
+  end
+
+  namespace :util do
 
     task :users do
       set :user, 'root'
@@ -106,12 +113,18 @@ Capistrano::Configuration.instance.load do
       reset_password
     end
 
+    task :passwords do
+      set :wordpress_db_name, fetch(:wordpress_db_name, Capistrano::CLI.ui.ask("New Wordpress Database Name:"))
+      set :wordpress_db_user, fetch(:wordpress_db_user, Capistrano::CLI.ui.ask("New Wordpress Database User:"))
+      set :wordpress_db_password, fetch(:wordpress_db_password, Capistrano::CLI.ui.ask("New Wordpress Database Password:"))
+    end
+
     task :generate_ssh_keys do
-      run "mkdir -p /home/wordpress/.ssh"
-      run "chmod 700 /home/wordpress/.ssh"
-      run "ssh-keygen -q -f /home/wordpress/.ssh/id_rsa -N ''"
+      run "#{try_sudo} mkdir -p /home/wordpress/.ssh"
+      run "#{try_sudo} chmod 700 /home/wordpress/.ssh"
+      run "if [ -f /home/wordpress/.ssh/id_rsa ]; then echo 'SSH key already exists'; else #{try_sudo} ssh-keygen -q -f /home/wordpress/.ssh/id_rsa -N ''; fi"
       pubkey = capture("cat /home/wordpress/.ssh/id_rsa.pub")
-      puts "Below is a freshly generated SSH public key for your server."
+      puts "Below is the SSH public key for your server."
       puts "Please add this as a 'deploy key' to your github project."
       puts ""
       puts pubkey
@@ -158,10 +171,6 @@ Capistrano::Configuration.instance.load do
   end
 
   namespace :mysql do
-    task :setup do
-      password
-      databases
-    end
 
     task :password do
       puts "Setting MySQL Password"
@@ -179,7 +188,6 @@ Capistrano::Configuration.instance.load do
     end
 
     task :create_databases do
-      wordpress.passwords
       set :mysql_root_password, fetch(:mysql_root_password, Capistrano::CLI.password_prompt("MySQL root password:"))
       run "mysqladmin -uroot -p#{mysql_root_password} --default-character-set=utf8 create #{wordpress_db_name}"
       run "echo 'GRANT ALL PRIVILEGES ON #{wordpress_db_name}.* to \"#{wordpress_db_user}\"@\"localhost\" IDENTIFIED BY \"#{wordpress_db_password}\"; FLUSH PRIVILEGES;' | mysql -uroot -p#{mysql_root_password}"
@@ -187,7 +195,7 @@ Capistrano::Configuration.instance.load do
 
   end
 
-  namespace :wordpress do
+  namespace :wp do
 
     task :checkout do
       run "rm -rf #{shared_path}/wordpress || true"
@@ -195,18 +203,18 @@ Capistrano::Configuration.instance.load do
     end
 
     task :configure do
-      wordpress.passwords
       file = File.join(File.dirname(__FILE__), "..", "wp-config.php.erb")
       template = File.read(file)
       buffer = ERB.new(template).result(binding)
 
       put buffer, "#{shared_path}/wp-config.php", :mode => 0444
     end
+
   end
 
   namespace :puppet do
 
-    task :setup do
+    task :install_and_run do
       set :user, 'root'
       users
       install_dependencies
