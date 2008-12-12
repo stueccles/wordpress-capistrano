@@ -1,3 +1,0 @@
-[submodule "lib/puppet"]
-	path = lib/puppet
-	url = git://github.com/jestro/puppet-wordpress.git
