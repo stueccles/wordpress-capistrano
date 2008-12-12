@@ -19,7 +19,7 @@ h2. Setup
 
 * Create a theme in @themes@
 * Drop your plugins in @plugins@
-* Adjust the settings in @config/deploy.rb@
+* Adjust the settings in @Capfile@
 * @cap setup:server@
 * Add your GitHub deploy key as instructed by the setup task.
 * @cap setup:wordpress@
