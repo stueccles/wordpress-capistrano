@@ -19,34 +19,8 @@ h2. Setup
 
 * Create a theme in @themes@
 * Drop your plugins in @plugins@
-* Update @config/wp-config.php@
 * Adjust the settings in @config/deploy.rb@
-* Adjust the settings in
- @config/puppet.pp@
-* @cap deploy:setup@
-* @cap setup:generate_ssh_keys@
+* @cap setup:server@
 * Add your GitHub deploy key as instructed by the setup task.
-* @cap deploy:cold@
-* Subsqeuently, to deploy changes, run @cap deploy@
-
-h3. Switching Wordpress Versions
-
-<pre>
-  <code>
-    cd wordpress
-
-    #show all versions
-    git tag -l
-
-    #checkout a version
-    git checkout 2.6.3
-
-    cd ..
-
-    #commit
-    git commit wordpress -m "use wordpress 2.6.3"
-
-    #push
-    git push
-  </code>
-</pre>
+* @cap setup:wordpress@
+* @cap deploy@
