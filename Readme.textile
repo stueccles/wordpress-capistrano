@@ -10,10 +10,8 @@ h2. Setup
 
 <pre>
   <code>
-    git clone git@github.com:yourname/yourwordpressproject.git
-    cd yourwordpressproject
-    git submodule init
-    git submodule update
+    git clone git@github.com:yourname/my_special_wordpress_site_.git
+    cd my_special_wordpress_site
   </code>
 </pre>
 
