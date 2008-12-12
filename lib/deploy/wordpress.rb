@@ -59,10 +59,10 @@ Capistrano::Configuration.instance.load do
         mkdir -p #{latest_release}/finalized &&
         cp -rv   #{shared_path}/wordpress/*     #{latest_release}/finalized/ &&
         cp -rv   #{shared_path}/wp-config.php   #{latest_release}/finalized/wp-config.php &&
-        rm -f    #{latest_release}/finalized/wp-content &&
+        rm -rf   #{latest_release}/finalized/wp-content &&
         mkdir    #{latest_release}/finalized/wp-content &&
-        cp -rv   #{latest_release}/themes       #{current_path}/finalized/wp-content/ &&
-        cp -rv   #{latest_release}/plugins      #{current_path}/finalized/wp-content/
+        cp -rv   #{latest_release}/themes       #{latest_release}/finalized/wp-content/ &&
+        cp -rv   #{latest_release}/plugins      #{latest_release}/finalized/wp-content/
       CMD
     end
 
@@ -125,7 +125,7 @@ Capistrano::Configuration.instance.load do
       run "if [ -f /home/wordpress/.ssh/id_rsa ]; then echo 'SSH key already exists'; else #{try_sudo} ssh-keygen -q -f /home/wordpress/.ssh/id_rsa -N ''; fi"
       pubkey = capture("cat /home/wordpress/.ssh/id_rsa.pub")
       puts "Below is the SSH public key for your server."
-      puts "Please add this as a 'deploy key' to your github project."
+      puts "Please add this key to your account on GitHub."
       puts ""
       puts pubkey
       puts ""
@@ -231,7 +231,7 @@ Capistrano::Configuration.instance.load do
     task :install_dependencies do
       set :user, 'root'
       #install ruby and curl
-      run "yum install -y ruby ruby-devel ruby-libs ruby-rdoc ruby-ri curl which"
+      run "yum install -y ruby ruby-devel ruby-libs ruby-rdoc ruby-ri curl which openssl-devel zlib-devel"
 
       #install rubygems
       run "cd /tmp && curl -OL http://rubyforge.org/frs/download.php/45905/rubygems-1.3.1.tgz"

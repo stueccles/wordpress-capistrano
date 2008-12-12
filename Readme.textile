@@ -4,21 +4,60 @@ This is a repo intended for use as a template for your wordpress projects.
 
 h2. Setup
 
+For this example, we'll assume your GitHub username is @johndoe@ and you wanted to setup a WordPress blog at @johndoe.example.com@:
+
 * "Fork":http://github.com/jestro/wordpress-capistrano/fork this repo
-* Rename your project, make it private if desired
-* Clone your fresh repo:
+* Make your project private, and rename it your project name. Say, @johndoe_blog@, for example.
+* Clone your fresh repo into the @wp-content@ folder of your local wordpress install:
 
 <pre>
   <code>
-    git clone git@github.com:yourname/my_special_wordpress_site_.git
-    cd my_special_wordpress_site
+    cd LOCAL_WORDPRESS_INSTALL
+    rm -rf wp-content
+    git clone git@github.com:johndoe/johndoe_blog.git wp-content
+    cd wp-content
   </code>
 </pre>
 
-* Create a theme in @themes@
-* Drop your plugins in @plugins@
 * Adjust the settings in @Capfile@
+
+<code>
+  <pre>
+    #the domain name for the server you'll be running wordpress on
+    set :domain, "johndoe.example.com"
+
+    #the name of this wordpress project
+    set :application, "johndoe_blog"
+
+    #your repo
+    set :repository,  "git@github.com:johndoe/johndoe_blog.git"
+  </pre>
+</code>
+
+Once all that's done, commit and push it back to GitHub. Then hack on your WordPress theme and drop your plugins as normal, committing and pushing as you go.
+
+h3. Setting up a LAMP Stack on a CentOS 5.2 Server
+
+Once you're ready to rock, pick up a server from Slicehost or something.
+
 * @cap setup:server@
-* Add your GitHub deploy key as instructed by the setup task.
+** You'll first be prompted for your @root@ password
+** A bunch of stuff will get installed. Go get a beer. Don't worry, you can bill your client for this - you're &lgt;airqotes&rgt;busy setting up their server&lgt;/airqotes&rgt;
+** After lots of installing of lots of stuff, you'll be asked for a couple things:
+*** A new password for your @root@ user
+*** A password for the newly created @wordpress@ user
+*** A password for the @root@ account of MySQL
+* Once, that's done, an SSH key will be generated for you. Add this key to your account GitHub project (see http://github.com/guides/understanding-deploy-keys for why we reccomend this instead of a 'deploy key').
+
+h3. To setup WordPress on your server
+
 * @cap setup:wordpress@
+
+** You'll first be prompted for your @wordpress@ user's password.
+** You'll then be prompted for a database name, username, and password for this WordPress site. This database will be created and @wp-config.php@ setup for you. You'll be prompted for the password for the @root@ account of MySQL before to run this command.
+
+h3. To deploy your WordPress site to your server
+
 * @cap deploy@
+
+That's it, seriously. Hit the server url you setup in your @Capfile@, and run through the WordPress install process! If you update your themes / plugins, just commit and push them to GitHub, then run @cap deploy@ again!
