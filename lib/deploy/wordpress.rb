@@ -92,6 +92,8 @@ Capistrano::Configuration.instance.load do
 
     desc "Setup this server for a new wordpress site."
     task :wordpress do
+      sudo "mkdir -p /var/www/apps"
+      sudo "chown -R wordpress /var/www/apps"
       deploy.setup
       util.passwords
       mysql.create_databases
