@@ -166,7 +166,7 @@ Capistrano::Configuration.instance.load do
       template = File.read(file)
       buffer = ERB.new(template).result(binding)
 
-      put buffer, "#{shared_path}/#{application}.conf", :mode => 0444
+      put buffer, "#{shared_path}/#{application}.conf"
       sudo "mv #{shared_path}/#{application}.conf /etc/httpd/conf.d/"
       sudo "/etc/init.d/httpd restart"
     end
@@ -215,7 +215,7 @@ Capistrano::Configuration.instance.load do
       template = File.read(file)
       buffer = ERB.new(template).result(binding)
 
-      put buffer, "#{shared_path}/wp-config.php", :mode => 0444
+      put buffer, "#{shared_path}/wp-config.php"
     end
 
   end
