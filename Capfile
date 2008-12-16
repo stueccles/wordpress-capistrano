@@ -30,6 +30,10 @@ require File.join(File.dirname(__FILE__), 'lib', 'deploy', 'wordpress')
 
 # set :wordpress_db_host, "localhost"
 
+# WordPress path. Unless set here, these variables *WILL NOT* be set in wp-config.php
+# set :wordpress_home, "http://www.yourdomain.com"
+# set :wordpress_siteurl, "http://www.yourdomain.com"
+
 #these are randomized on `cap setup:wordpress`
 # set :wordpress_auth_key, Digest::SHA1.hexdigest(rand.to_s)
 # set :wordpress_secure_auth_key, Digest::SHA1.hexdigest(rand.to_s)
