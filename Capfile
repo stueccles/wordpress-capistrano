@@ -17,8 +17,14 @@ require File.join(File.dirname(__FILE__), 'lib', 'deploy', 'wordpress')
 #Customizations
 #==============
 
-#if you've forked and customized puppet-lamp, enter the url to your repos tarball here
-#set :puppet_tarball_url, "http://github.com/jestro/puppet-lamp/tarball/master"
+#if you've forked and customized puppet-lamp and want to use it to bootstrap your server,
+#enter the URL to a tarball of your puppet configuration here
+#set :initial_puppet_tarball_url, "http://github.com/jestro/puppet-lamp/tarball/master"
+
+#if you've forked and customized puppet-lamp, enter the git clone url here.
+#it's perfectly fine to bootstrap your server with the stock puppet-lamp 
+#manifests, and then run a puppet:update_from_git to get your customizations
+#set :puppet_git_repo_url, "git@github.com/youruser/puppet-lamp.git"
 
 #if you need to use a different version of wordpress, specify that here
 #set :wordpress_svn_url, "http://svn.automattic.com/wordpress/tags/2.7"

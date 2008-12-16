@@ -11,7 +11,8 @@ Capistrano::Configuration.instance.load do
   set :deploy_via, :remote_cache
   set :branch, "master"
   set :git_enable_submodules, 1
-  set :puppet_tarball_url, "http://github.com/jestro/puppet-lamp/tarball/master"
+  set :initial_puppet_tarball_url, "http://github.com/jestro/puppet-lamp/tarball/master"
+  set :puppet_git_repo_url, "git://github.com/jestro/puppet-lamp.git"
   set :wordpress_db_host, "localhost"
   set :wordpress_svn_url, "http://svn.automattic.com/wordpress/tags/2.7"
   set :wordpress_auth_key, Digest::SHA1.hexdigest(rand.to_s)
@@ -264,10 +265,23 @@ Capistrano::Configuration.instance.load do
 
     task :download do
       run "cd /tmp && mkdir puppet"
-      run "cd /tmp/puppet && curl -L #{puppet_tarball_url} | tar xz"
+      run "cd /tmp/puppet && curl -L #{initial_puppet_tarball_url} | tar xz"
       run "rm -rf /etc/puppet"
       run "mv /tmp/puppet/* /etc/puppet"
       run "rm -rf /tmp/puppet*"
+    end
+
+    task :switch_to_git do
+      unless (capture("sudo ls /etc/puppet/.git > /dev/null 2>&1 && echo 'true' || echo 'false'").chomp == 'true')
+        run "sudo rm -rf /etc/puppet"
+        sudo "git clone #{puppet_git_repo_url} /etc/puppet"
+      end
+    end
+
+    task :update_from_git do
+      switch_to_git
+      run "cd /etc/puppet && #{sudo} git pull origin master"
+      update
     end
 
     task :update do
