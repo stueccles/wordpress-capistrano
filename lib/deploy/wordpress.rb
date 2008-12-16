@@ -95,9 +95,8 @@ Capistrano::Configuration.instance.load do
       sudo "mkdir -p /var/www/apps"
       sudo "chown -R wordpress /var/www/apps"
       deploy.setup
-      util.passwords
       mysql.create_databases
-      wp.configure
+      wp.config
       apache.configure
       wp.checkout
     end
@@ -156,6 +155,7 @@ Capistrano::Configuration.instance.load do
   end
 
   namespace :apache do
+    desc "Creates a vhost configuration file and restarts apache"
     task :configure do
       aliases = []
       aliases << "www.#{domain}"
@@ -174,6 +174,7 @@ Capistrano::Configuration.instance.load do
 
   namespace :mysql do
 
+    desc "Sets the MySQL root password, assuming there is none"
     task :password do
       puts "Setting MySQL Password"
       password_set = false
@@ -189,7 +190,9 @@ Capistrano::Configuration.instance.load do
       end
     end
 
+    desc "Creates MySQL database and user for wordpress"
     task :create_databases do
+      util.passwords
       set :mysql_root_password, fetch(:mysql_root_password, Capistrano::CLI.password_prompt("MySQL root password:"))
       run "mysqladmin -uroot -p#{mysql_root_password} --default-character-set=utf8 create #{wordpress_db_name}"
       run "echo 'GRANT ALL PRIVILEGES ON #{wordpress_db_name}.* to \"#{wordpress_db_user}\"@\"localhost\" IDENTIFIED BY \"#{wordpress_db_password}\"; FLUSH PRIVILEGES;' | mysql -uroot -p#{mysql_root_password}"
@@ -199,12 +202,15 @@ Capistrano::Configuration.instance.load do
 
   namespace :wp do
 
+    desc "Checks out a copy of wordpress to a shared location"
     task :checkout do
       run "rm -rf #{shared_path}/wordpress || true"
       run "svn co #{wordpress_svn_url} #{shared_path}/wordpress"
     end
 
-    task :configure do
+    desc "Sets up wp-config.php"
+    task :config do
+      util.passwords
       file = File.join(File.dirname(__FILE__), "..", "wp-config.php.erb")
       template = File.read(file)
       buffer = ERB.new(template).result(binding)
