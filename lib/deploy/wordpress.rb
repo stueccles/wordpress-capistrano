@@ -115,9 +115,9 @@ Capistrano::Configuration.instance.load do
     end
 
     task :passwords do
-      set(:wordpress_db_name, fetch(:wordpress_db_name, Capistrano::CLI.ui.ask("New Wordpress Database Name:"))) unless exists?(:wordpress_db_name)
-      set(:wordpress_db_user, fetch(:wordpress_db_user, Capistrano::CLI.ui.ask("New Wordpress Database User:"))) unless exists?(:wordpress_db_user)
-      set(:wordpress_db_password, fetch(:wordpress_db_password, Capistrano::CLI.ui.ask("New Wordpress Database Password:"))) unless exists?(:wordpress_db_password)
+      set(:wordpress_db_name, fetch(:wordpress_db_name, Capistrano::CLI.ui.ask("Wordpress Database Name:"))) unless exists?(:wordpress_db_name)
+      set(:wordpress_db_user, fetch(:wordpress_db_user, Capistrano::CLI.ui.ask("Wordpress Database User:"))) unless exists?(:wordpress_db_user)
+      set(:wordpress_db_password, fetch(:wordpress_db_password, Capistrano::CLI.ui.ask("Wordpress Database Password:"))) unless exists?(:wordpress_db_password)
     end
 
     task :generate_ssh_keys do
@@ -196,6 +196,15 @@ Capistrano::Configuration.instance.load do
       set(:mysql_root_password, fetch(:mysql_root_password, Capistrano::CLI.password_prompt("MySQL root password:"))) unless exists?(:mysql_root_password)
       run "mysqladmin -uroot -p#{mysql_root_password} --default-character-set=utf8 create #{wordpress_db_name}"
       run "echo 'GRANT ALL PRIVILEGES ON #{wordpress_db_name}.* to \"#{wordpress_db_user}\"@\"localhost\" IDENTIFIED BY \"#{wordpress_db_password}\"; FLUSH PRIVILEGES;' | mysql -uroot -p#{mysql_root_password}"
+    end
+
+    desc "Import a MySQL database"
+    task :import_database do
+      file = File.read(ENV["FILE"])
+      util.passwords
+      run "rm #{shared_path}/import.sql || true"
+      put file, "#{shared_path}/import.sql"
+      run "mysql -u#{wordpress_db_user} -p#{wordpress_db_password} #{wordpress_db_name} < #{shared_path}/import.sql"
     end
 
   end
