@@ -293,7 +293,7 @@ Capistrano::Configuration.instance.load do
 
     task :update_from_git do
       switch_to_git
-      run "cd /etc/puppet && #{sudo} git pull origin master"
+      run "cd /etc/puppet && git pull origin master"
       update
     end
 
