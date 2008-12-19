@@ -274,7 +274,7 @@ Capistrano::Configuration.instance.load do
     task :switch_to_git do
       unless (capture("sudo ls /etc/puppet/.git > /dev/null 2>&1 && echo 'true' || echo 'false'").chomp == 'true')
         run "sudo rm -rf /etc/puppet"
-        run "git clone #{puppet_git_repo_url} /etc/puppet" do |ch, stream, data|
+        run "sudo git clone #{puppet_git_repo_url} /etc/puppet" do |ch, stream, data|
           case stream
           when :out
             if data =~ /\(yes\/no\)\?/ # first time connecting via ssh, add to known_hosts?
