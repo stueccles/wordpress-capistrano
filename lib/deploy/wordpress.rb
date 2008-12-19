@@ -226,6 +226,7 @@ Capistrano::Configuration.instance.load do
       buffer = ERB.new(template).result(binding)
 
       put buffer, "#{shared_path}/wp-config.php"
+      puts "New wp-config.php uploaded! Please run cap:deploy to activate these changes."
     end
 
   end
