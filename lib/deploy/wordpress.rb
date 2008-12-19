@@ -288,6 +288,7 @@ Capistrano::Configuration.instance.load do
         end
         run "sudo rm -rf /etc/puppet"
         run "sudo ln -s /home/wordpress/puppet /etc/puppet"
+        run "sudo chown -R wordpress /etc/puppet"
       end
     end
 
